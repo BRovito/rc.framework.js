@@ -1,0 +1,20 @@
+{
+  "name": "rc.framework.js",
+  "version": "0.1.0",
+  "authors": [
+    "Allov & w3max"
+  ],
+  "description": "Base code to create a knockout based web application. Includes routing, dialogs and modal capabilities.",
+  "main": "startup.js",
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

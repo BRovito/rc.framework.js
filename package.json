@@ -1,0 +1,19 @@
+{
+  "name": "rc.framework.js",
+  "version": "0.1.0",
+  "description": "Base code to create a knockout based web application. Includes routing, dialogs and modals capabilities.",
+  "main": "startup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Allov/rc.framework.js.git"
+  },
+  "author": "Allov & w3max",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Allov/rc.framework.js/issues"
+  },
+  "homepage": "https://github.com/Allov/rc.framework.js"
+}
