@@ -89,11 +89,11 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
         }
 
         Framework.prototype.init = function( /*config*/ ) {
-            // var self = this;
+            var self = this;
 
-            // var defaultSettings = {};
-
-            // var settings = $.extend(defaultSettings, config);
+            ko.applyBindings({
+                framework: self
+            });
 
             hasher.init();
         };
@@ -340,7 +340,7 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
 
         function navigate(self, url, queryParams) {
 
-            var filteredRoutes = _.filter(self.framework.routes,
+            var filteredRoutes = _.filter(self.routes,
                 function(r) {
                     return r.url === url.toLowerCase();
                 });
@@ -349,6 +349,10 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
             var signedIn = false;
 
             var route = filteredRoutes[0];
+
+            if (!route) {
+                throw "No filtered route has been found. (Did you add a page yet?)";
+            }
 
             if (filteredRoutes.length > 1) {
                 route = _.first(filteredRoutes,
@@ -402,19 +406,22 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
 
         function buildComponentConfigFromPageConfig(pageConfig) {
             return {
-                name: pageConfig.name + '-page'
+                name: pageConfig.name + '-page',
+                htmlOnly: pageConfig.htmlOnly
             };
         }
 
         function buildComponentConfigFromDialogConfig(dialogConfig) {
             return {
-                name: dialogConfig.name + '-dialog'
+                name: dialogConfig.name + '-dialog',
+                htmlOnly: dialogConfig.htmlOnly
             };
         }
 
         function buildComponentConfigFromModalConfig(modalConfig) {
             return {
-                name: modalConfig.name + '-modal'
+                name: modalConfig.name + '-modal',
+                htmlOnly: modalConfig.htmlOnly
             };
         }
 
