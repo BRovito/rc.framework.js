@@ -95,6 +95,14 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
                 framework: self
             });
 
+            var $modalElement = getModalElement();
+
+            self.$modalElement.modal({
+                backdrop: 'static',
+                keyboard: false,
+                show: false
+            });
+
             hasher.init();
         };
 
@@ -182,10 +190,10 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
 
             if (currentModal) {
                 currentModal.close().then(function() {
-                    self.currentModal(modal);
+                    showModal(self, modal);
                 });
             } else {
-                self.currentModal(modal);
+                showModal(self, modal);
             }
 
             return deferred.promise();
@@ -197,10 +205,10 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
             var currentModal = this.currentModal();
 
             if (currentModal) {
-                currentModal.close().then(function(){
+                currentModal.close().then(function() {
                     deferred.resolve();
                 });
-            }else{
+            } else {
                 deferred.resolve();
             }
 
@@ -507,33 +515,32 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
             return result || null;
         }
 
-        function showModal() {
-            var $modalElement = getModalElement();
+        function showModal(self, modal) {
+            self.currentModal(modal);
             var deferred = new $.Deferred();
 
-            if (!$modalElement.hasClass('in')) {
-                $modalElement.modal('show')
+            if (!self.$modalElement.hasClass('in')) {
+                self.$modalElement.modal('show')
                     .on('shown.bs.modal', function( /*e*/ ) {
-                        deferred.resolve($modalElement);
+                        deferred.resolve(self.$modalElement);
                     });
             } else {
-                deferred.resolve($modalElement);
+                deferred.resolve(self.$modalElement);
             }
 
             return deferred.promise();
         }
 
-        function hideModal() {
-            var $modalElement = getModalElement();
+        function hideModal(self) {
             var deferred = new $.Deferred();
 
-            if ($modalElement.hasClass('in')) {
-                $modalElement.modal('hide')
+            if (self.$modalElement.hasClass('in')) {
+                self.$modalElement.modal('hide')
                     .on('hidden.bs.modal', function( /*e*/ ) {
-                        deferred.resolve($modalElement);
+                        deferred.resolve(self.$modalElement);
                     });
             } else {
-                deferred.resolve($modalElement);
+                deferred.resolve(self.$modalElement);
             }
 
             return deferred.promise();
@@ -543,11 +550,11 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
             var $modalElement = $('modal');
 
             if ($modalElement.length < 1) {
-                throw new Error('Framework.showModal - Cannot show modal if modal component is not part of the page.');
+                throw new Error('Framework.showModal - The modal component is missing in the page.');
             }
 
             if ($modalElement.length > 1) {
-                throw new Error('Framework.showModal - Cannot show modal if more than one modal component is part of the page.');
+                throw new Error('Framework.showModal - There must be only one instance of the modal component in the page.');
             }
 
             return $modalElement;
