@@ -176,7 +176,9 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
                 throw new Error('Framework.registerComponent - Already registered component: ' + componentConfig.name);
             }
 
-            var requirePath = 'components/' + componentConfig.name + '/' + componentConfig.name;
+            var basePath = componentConfig.basePath || 'components/';
+
+            var requirePath = basePath + componentConfig.name + '/' + componentConfig.name;
 
             if (componentConfig.htmlOnly) {
                 requirePath = 'text!' + requirePath + '.html';
