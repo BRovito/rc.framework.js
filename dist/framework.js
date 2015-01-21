@@ -95,12 +95,22 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utili
                 framework: self
             });
 
-            var $modalElement = getModalElement();
+            self.$modalElement = getModalElement();
 
             self.$modalElement.modal({
                 backdrop: 'static',
                 keyboard: false,
                 show: false
+            });
+
+            self.registerComponent({
+                name: 'dialogs',
+                basePath: 'bower_components/rc.framework.js/dist/components/'
+            });
+
+            self.registerComponent({
+                name: 'modal',
+                basePath: 'bower_components/rc.framework.js/dist/components/'
             });
 
             hasher.init();
