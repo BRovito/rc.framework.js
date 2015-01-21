@@ -89,11 +89,11 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
         }
 
         Framework.prototype.init = function( /*config*/ ) {
-            // var self = this;
+            var self = this;
 
-            // var defaultSettings = {};
-
-            // var settings = $.extend(defaultSettings, config);
+            ko.applyBindings({
+                framework: self
+            });
 
             hasher.init();
         };
@@ -406,19 +406,22 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
 
         function buildComponentConfigFromPageConfig(pageConfig) {
             return {
-                name: pageConfig.name + '-page'
+                name: pageConfig.name + '-page',
+                htmlOnly: pageConfig.htmlOnly
             };
         }
 
         function buildComponentConfigFromDialogConfig(dialogConfig) {
             return {
-                name: dialogConfig.name + '-dialog'
+                name: dialogConfig.name + '-dialog',
+                htmlOnly: dialogConfig.htmlOnly
             };
         }
 
         function buildComponentConfigFromModalConfig(modalConfig) {
             return {
-                name: modalConfig.name + '-modal'
+                name: modalConfig.name + '-modal',
+                htmlOnly: modalConfig.htmlOnly
             };
         }
 
