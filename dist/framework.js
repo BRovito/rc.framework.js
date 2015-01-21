@@ -9,8 +9,20 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
 
             self.routes = [];
             self.dialogConfigs = [];
+            self.modalConfigs = [];
             self.currentRoute = ko.observable(null);
             self.loadedDialogs = ko.observableArray([]);
+            self.currentModal = ko.observable(null);
+
+            self.currentDialog = ko.computed(function() {
+                var loadedDialogs = self.loadedDialogs();
+
+                if (loadedDialogs.length) {
+                    return loadedDialogs[loadedDialogs.length - 1];
+                }
+
+                return null;
+            });
 
             self.currentDialog = ko.computed(function() {
                 var loadedDialogs = self.loadedDialogs();
@@ -24,6 +36,10 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
 
             self.isDialogOpen = ko.computed(function() {
                 return !!self.currentDialog();
+            });
+
+            self.isModalOpen = ko.computed(function() {
+                return !!self.currentModal();
             });
 
             self.isDialogOpen.subscribe(function(isDialogOpen) {
@@ -45,6 +61,16 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
 
                 if (currentDialog) {
                     return currentDialog.title;
+                }
+
+                return '';
+            });
+
+            self.currentModalTitle = ko.computed(function() {
+                var currentModal = self.currentModal();
+
+                if (currentModal) {
+                    return currentModal.title;
                 }
 
                 return '';
@@ -75,6 +101,16 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
         Framework.prototype.showDialog = function(name, params) {
             var deferred = new $.Deferred();
             var self = this;
+
+            var $dialogsElement = $('dialogs');
+
+            if ($dialogsElement.length < 1) {
+                throw new Error('Framework.showDialog - Cannot show dialog if dialogs component is not part of the page.');
+            }
+
+            if ($dialogsElement.length > 1) {
+                throw new Error('Framework.showDialog - Cannot show dialog if more than one dialogs component is part of the page.');
+            }
 
             var dialogConfigToShow = findByName(self.dialogConfigs, name);
 
@@ -118,6 +154,59 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             return deferred.promise();
         };
 
+        Framework.prototype.showModal = function(name, params) {
+            var deferred = new $.Deferred();
+            var self = this;
+
+            var modalConfigToShow = findByName(self.modalConfigs, name);
+
+            if (!modalConfigToShow) {
+                throw new Error('Framework.showModal - Unregistered modal: ' + name);
+            }
+
+            var modal = {
+                settings: {
+                    close: function(data) {
+                        return hideModal().then(function() {
+                            self.currentModal(null);
+                            deferred.resolve(data);
+                        });
+                    },
+                    params: params,
+                    title: modalConfigToShow.title
+                },
+                componentName: modalConfigToShow.componentName
+            };
+
+            var currentModal = self.currentModal();
+
+            if (currentModal) {
+                currentModal.close().then(function() {
+                    self.currentModal(modal);
+                });
+            } else {
+                self.currentModal(modal);
+            }
+
+            return deferred.promise();
+        };
+
+        Framework.prototype.hideCurrentModal = function() {
+            var deferred = new $.Deferred();
+
+            var currentModal = this.currentModal();
+
+            if (currentModal) {
+                currentModal.close().then(function(){
+                    deferred.resolve();
+                });
+            }else{
+                deferred.resolve();
+            }
+
+            return deferred.promise();
+        };
+
         Framework.prototype.hideCurrentDialog = function() {
             var currentDialog = this.currentDialog();
 
@@ -151,6 +240,19 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             });
 
             this.routes.push(route);
+        };
+
+        Framework.prototype.registerModal = function(modalConfig) {
+            if (!modalConfig.name) {
+                throw new Error('Framework.registerModal - Argument missing exception: name');
+            }
+
+            var componentConfig = buildComponentConfigFromModalConfig(modalConfig);
+            this.registerComponent(componentConfig);
+
+            var finalModalConfig = applyModalConventions(modalConfig, componentConfig);
+
+            this.modalConfigs.push(finalModalConfig);
         };
 
         Framework.prototype.registerDialog = function(dialogConfig) {
@@ -201,7 +303,7 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             hasher.changed.active = true;
         };
 
-        //Cette méthod peut être overrided au besoin par le end user! (on est en javascript...)
+        //Cette méthode peut être overrided au besoin par le end user! (on est en javascript...)
         Framework.prototype.unknownRouteHandler = function() {
             var self = this;
 
@@ -308,6 +410,12 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             };
         }
 
+        function buildComponentConfigFromModalConfig(modalConfig) {
+            return {
+                name: modalConfig.name + '-modal'
+            };
+        }
+
         function applyDialogConventions(dialogConfig, componentConfig) {
             var finalDialogConfig = $.extend({}, dialogConfig);
 
@@ -318,6 +426,18 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             finalDialogConfig.componentName = componentConfig.name;
 
             return finalDialogConfig;
+        }
+
+        function applyModalConventions(modalConfig, componentConfig) {
+            var finalModalConfig = $.extend({}, modalConfig);
+
+            if (!finalModalConfig.title) {
+                finalModalConfig.title = finalModalConfig.name;
+            }
+
+            finalModalConfig.componentName = componentConfig.name;
+
+            return finalModalConfig;
         }
 
         function buildRoute(pageConfig, componentConfig) {
@@ -376,6 +496,52 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             });
 
             return result || null;
+        }
+
+        function showModal() {
+            var $modalElement = getModalElement();
+            var deferred = new $.Deferred();
+
+            if (!$modalElement.hasClass('in')) {
+                $modalElement.modal('show')
+                    .on('shown.bs.modal', function( /*e*/ ) {
+                        deferred.resolve($modalElement);
+                    });
+            } else {
+                deferred.resolve($modalElement);
+            }
+
+            return deferred.promise();
+        }
+
+        function hideModal() {
+            var $modalElement = getModalElement();
+            var deferred = new $.Deferred();
+
+            if ($modalElement.hasClass('in')) {
+                $modalElement.modal('hide')
+                    .on('hidden.bs.modal', function( /*e*/ ) {
+                        deferred.resolve($modalElement);
+                    });
+            } else {
+                deferred.resolve($modalElement);
+            }
+
+            return deferred.promise();
+        }
+
+        function getModalElement() {
+            var $modalElement = $('modal');
+
+            if ($modalElement.length < 1) {
+                throw new Error('Framework.showModal - Cannot show modal if modal component is not part of the page.');
+            }
+
+            if ($modalElement.length > 1) {
+                throw new Error('Framework.showModal - Cannot show modal if more than one modal component is part of the page.');
+            }
+
+            return $modalElement;
         }
 
         return new Framework();
