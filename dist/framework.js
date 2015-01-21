@@ -280,6 +280,14 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
 
             var basePath = componentConfig.basePath || 'components/';
 
+            if (componentConfig.isBower) {
+                if (!componentConfig.type) {
+                    componentConfig.type = "component";
+                }
+
+                basePath = "bower_components/rc." + componentConfig.type + "." + componentConfig.name + "/dist/";
+            }
+
             var requirePath = basePath + componentConfig.name + '/' + componentConfig.name;
 
             if (componentConfig.htmlOnly) {
@@ -407,21 +415,30 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
         function buildComponentConfigFromPageConfig(pageConfig) {
             return {
                 name: pageConfig.name + '-page',
-                htmlOnly: pageConfig.htmlOnly
+                htmlOnly: pageConfig.htmlOnly,
+                basePath: pageConfig.basePath,
+                isBower: pageConfig.isBower,
+                type: "page"
             };
         }
 
         function buildComponentConfigFromDialogConfig(dialogConfig) {
             return {
                 name: dialogConfig.name + '-dialog',
-                htmlOnly: dialogConfig.htmlOnly
+                htmlOnly: dialogConfig.htmlOnly,
+                basePath: dialogConfig.basePath,
+                isBower: dialogConfig.isBower,
+                type: "dialog"
             };
         }
 
         function buildComponentConfigFromModalConfig(modalConfig) {
             return {
                 name: modalConfig.name + '-modal',
-                htmlOnly: modalConfig.htmlOnly
+                htmlOnly: modalConfig.htmlOnly,
+                basePath: modalConfig.basePath,
+                isBower: modalConfig.isBower,
+                type: "modal"
             };
         }
 
