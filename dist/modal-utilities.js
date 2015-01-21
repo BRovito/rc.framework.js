@@ -35,37 +35,7 @@ define(['jquery', 'framework-utilities'],
             );
         };
 
-        function show($elementToShow, $elementToHide){
-            var deferred = new $.Deferred();
-
-            hide($elementToHide).then(function() {
-                if (!$elementToShow.hasClass('in')) {
-                    $elementToShow.modal('show')
-                        .on('shown.bs.modal', function(/*e*/) {
-                            deferred.resolve($elementToShow);
-                        });
-                } else {
-                    deferred.resolve($elementToShow);
-                }
-            });
-
-            return deferred.promise();
-        }
-
-        function hide($elementToHide){
-            var deferred = new $.Deferred();
-
-            if ($elementToHide.hasClass('in')) {
-                $elementToHide.modal('hide')
-                    .on('hidden.bs.modal', function(/*e*/) {
-                        deferred.resolve($elementToHide);
-                    });
-            } else {
-                deferred.resolve($elementToHide);
-            }
-
-            return deferred.promise();
-        }
+        
 
         function addGenericModalWindow($body, loadingGifUrl, message) {
             var uniqueId = frameworkUtilities.generateUniqueElementId();
