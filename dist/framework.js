@@ -340,7 +340,7 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
 
         function navigate(self, url, queryParams) {
 
-            var filteredRoutes = _.filter(self.framework.routes,
+            var filteredRoutes = _.filter(self.routes,
                 function(r) {
                     return r.url === url.toLowerCase();
                 });
@@ -349,6 +349,10 @@ define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities
             var signedIn = false;
 
             var route = filteredRoutes[0];
+
+            if (!route) {
+                throw "No filtered route has been found. (Did you add a page yet?)";
+            }
 
             if (filteredRoutes.length > 1) {
                 route = _.first(filteredRoutes,
