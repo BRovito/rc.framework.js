@@ -1,37 +1,22 @@
-define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
-    function($, ko, _, koMissingFeatures) {
+define(['jquery', 'knockout', 'lodash', 'crossroads', 'hasher', 'modal-utilities', 'framework-utilities'],
+    function($, ko, _, crossroads, hasher, modalUtilities, frameworkUtilities) {
+        'use strict';
 
-        var KEYCODE_ENTER = 13;
-        var KEYCODE_ESC = 27;
-
-        function AppContext() {
+        function Framework() {
             var self = this;
 
-            //TODO: Attention : document may not be ready?
-            var $document = $(document);
-
-            $document.ready(function() {
-                //TODO: NE pas enregistrer cet event ici... 
-                //l'enregistrer seulement si y'a un dialog d'ouvert
-                $document.keydown(function(e) {
-                    switch (e.keyCode) {
-                        case KEYCODE_ESC:
-                            self.hideCurrentDialog();
-                            break;
-                    }
-                });
-            });
+            self.$document = $(document);
 
             self.routes = [];
             self.dialogConfigs = [];
             self.currentRoute = ko.observable(null);
-            self.displayedDialogs = ko.observableArray([]);
+            self.loadedDialogs = ko.observableArray([]);
 
             self.currentDialog = ko.computed(function() {
-                var displayedDialogs = self.displayedDialogs();
+                var loadedDialogs = self.loadedDialogs();
 
-                if (displayedDialogs.length) {
-                    return displayedDialogs[displayedDialogs.length - 1];
+                if (loadedDialogs.length) {
+                    return loadedDialogs[loadedDialogs.length - 1];
                 }
 
                 return null;
@@ -39,6 +24,10 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
 
             self.isDialogOpen = ko.computed(function() {
                 return !!self.currentDialog();
+            });
+
+            self.isDialogOpen.subscribe(function(isDialogOpen) {
+                registerOrUnregisterHideDialogKeyboardShortcut(self, isDialogOpen);
             });
 
             self.currentRouteTitle = ko.computed(function() {
@@ -69,22 +58,34 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
             //         self.showDialog(route.dialog);
             //     }
             // });
+
+            configureRouting(self);
         }
 
-        AppContext.prototype.showDialog = function(name, params) {
+        Framework.prototype.init = function( /*config*/ ) {
+            // var self = this;
+
+            // var defaultSettings = {};
+
+            // var settings = $.extend(defaultSettings, config);
+
+            hasher.init();
+        };
+
+        Framework.prototype.showDialog = function(name, params) {
             var deferred = new $.Deferred();
             var self = this;
 
             var dialogConfigToShow = findByName(self.dialogConfigs, name);
 
             if (!dialogConfigToShow) {
-                throw new Error('AppContext.showDialog - Unregistered dialog: ' + name);
+                throw new Error('Framework.showDialog - Unregistered dialog: ' + name);
             }
 
             var dialog = {
                 settings: {
                     close: function(data) {
-                        self.displayedDialogs.remove(dialog);
+                        self.loadedDialogs.remove(dialog);
 
                         if (self.currentDialog()) {
                             self.currentDialog().visible(true);
@@ -95,7 +96,7 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
                         //la position peut ne pas etre disponible dans le dialog
                         //ceci dit... ca pourrait causer des problemes avec le paging...
                         //il faudrit bloquer le paging tant que le scroll position n'a pas été rétabli
-                        $(document).scrollTop(dialog.previousScrollPosition);
+                        self.$document.scrollTop(dialog.previousScrollPosition);
 
 
                         deferred.resolve(data);
@@ -105,19 +106,19 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
                 },
                 componentName: dialogConfigToShow.componentName,
                 visible: ko.observable(true),
-                previousScrollPosition: $(document).scrollTop()
+                previousScrollPosition: self.$document.scrollTop()
             };
 
             if (self.currentDialog()) {
                 self.currentDialog().visible(false);
             }
 
-            self.displayedDialogs.push(dialog);
+            self.loadedDialogs.push(dialog);
 
             return deferred.promise();
         };
 
-        AppContext.prototype.hideCurrentDialog = function() {
+        Framework.prototype.hideCurrentDialog = function() {
             var currentDialog = this.currentDialog();
 
             if (currentDialog) {
@@ -125,21 +126,36 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
             }
         };
 
-        AppContext.prototype.registerPage = function(pageConfig) {
+        Framework.prototype.registerPage = function(pageConfig) {
+            var self = this;
+
             if (!pageConfig.name) {
-                throw new Error('AppContext.registerPage - Argument missing exception: name');
+                throw new Error('Framework.registerPage - Argument missing exception: name');
             }
 
             var componentConfig = buildComponentConfigFromPageConfig(pageConfig);
             this.registerComponent(componentConfig);
 
             var route = buildRoute(pageConfig, componentConfig);
+
+            //il pourrait y avoir 2 urls identiques - une requireAuthentication et l'autre pas...
+            if (_.any(self.routes,
+                    function(r) {
+                        return r.url == route.url && r.requireAuthentication == route.requireAuthentication;
+                    })) {
+                throw new Error('Framework.registerPage - Duplicate url: ' + route.url);
+            }
+
+            crossroads.addRoute(route.url + ':?query:', function(requestParams) {
+                navigate(self, route.url, requestParams);
+            });
+
             this.routes.push(route);
         };
 
-        AppContext.prototype.registerDialog = function(dialogConfig) {
+        Framework.prototype.registerDialog = function(dialogConfig) {
             if (!dialogConfig.name) {
-                throw new Error('AppContext.registerDialog - Argument missing exception: name');
+                throw new Error('Framework.registerDialog - Argument missing exception: name');
             }
 
             var componentConfig = buildComponentConfigFromDialogConfig(dialogConfig);
@@ -151,13 +167,13 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
         };
 
         //Registers a ko component with Radio-Canada conventions
-        AppContext.prototype.registerComponent = function(componentConfig) {
+        Framework.prototype.registerComponent = function(componentConfig) {
             if (!componentConfig.name) {
-                throw new Error('AppContext.registerComponent - Argument missing exception: name');
+                throw new Error('Framework.registerComponent - Argument missing exception: name');
             }
 
             if (ko.components.isRegistered(componentConfig.name)) {
-                throw new Error('AppContext.registerComponent - Already registered component: ' + componentConfig.name);
+                throw new Error('Framework.registerComponent - Already registered component: ' + componentConfig.name);
             }
 
             var requirePath = 'components/' + componentConfig.name + '/' + componentConfig.name;
@@ -178,6 +194,107 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
 
             ko.components.register(componentConfig.name, koComponentConfig);
         };
+
+        Framework.prototype.changeHashSilently = function(destination) {
+            hasher.changed.active = false;
+            hasher.setHash(destination);
+            hasher.changed.active = true;
+        };
+
+        //Cette méthod peut être overrided au besoin par le end user! (on est en javascript...)
+        Framework.prototype.unknownRouteHandler = function() {
+            var self = this;
+
+            //TODO: Bon format d'url - ou ca prend le #/ ???
+            self.navigate('page-non-trouvee');
+        };
+
+        Framework.prototype.navigate = function(url) {
+            var self = this;
+
+            if (url == hasher.getHash().toLowerCase()) { //reload
+                navigate(self, url);
+            } else {
+                hasher.setHash(url);
+            }
+        };
+
+        function configureRouting(self) {
+            //TODO: Utile?
+            crossroads.normalizeFn = crossroads.NORM_AS_OBJECT;
+
+            crossroads.bypassed.add(self.unknownRouteHandler);
+
+            hasher.initialized.add(function(newHash /*, oldHash*/ ) {
+                parseHash(self, newHash);
+            });
+
+            hasher.changed.add(function(newHash /*, oldHash*/ ) {
+                parseHash(self, newHash);
+            });
+        }
+
+        function navigate(self, url, queryParams) {
+
+            var filteredRoutes = _.filter(self.framework.routes,
+                function(r) {
+                    return r.url === url.toLowerCase();
+                });
+
+            //TODO: Supporter signedIn!
+            var signedIn = false;
+
+            var route = filteredRoutes[0];
+
+            if (filteredRoutes.length > 1) {
+                route = _.first(filteredRoutes,
+                    function(r) {
+                        return r.requireAuthentication === signedIn;
+                    });
+            }
+
+            if (route.requireAuthentication && !signedIn) {
+                //todo: handle not authorized
+                throw new Error('Framework.navigate - TODO: (FrameworkJS) not authorized');
+            } else {
+                route.params.queryParams = queryParams;
+                route.params.parsedQueryString = frameworkUtilities.chrissRogersJQqueryDeparam(queryParams["?query_"], true);
+                route.params.request = queryParams["request_"];
+                route.params.queryString = queryParams["?query_"];
+
+                //todo: si la route à un "loader" (funciton qui retourne une promesse - nom a déterminer (ex. activate)), lancer l'inititalisation... ;-) (durandal activate...)
+                //afficher un loader jusqu'à la fin de l'activate
+                //ou pas... la page peut afficher un loader et s'auto-initaliser...
+
+                self.currentRoute(route);
+            }
+        }
+
+        function parseHash(self, newHash) {
+            self.hideCurrentDialog();
+
+            crossroads.parse(newHash);
+        }
+
+        //var KEYCODE_ENTER = 13;
+        var KEYCODE_ESC = 27;
+
+        function registerOrUnregisterHideDialogKeyboardShortcut(self, isDialogOpen) {
+
+            var hideCurrentDialog = function(e) {
+                switch (e.keyCode) {
+                    case KEYCODE_ESC:
+                        self.hideCurrentDialog();
+                        break;
+                }
+            };
+
+            if (isDialogOpen) {
+                self.$document.on('keydown', hideCurrentDialog);
+            } else {
+                self.$document.off('keydown', hideCurrentDialog);
+            }
+        }
 
         function buildComponentConfigFromPageConfig(pageConfig) {
             return {
@@ -216,7 +333,7 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
 
             if (pageConfig.hasOwnProperty('url') &&
                 (typeof pageConfig.url === 'string' || pageConfig.url instanceof String)) {
-                route.url = pageConfig.url;
+                route.url = pageConfig.url.toLowerCase();
             }
 
             if (pageConfig.hasOwnProperty('title') &&
@@ -261,5 +378,5 @@ define(['jquery', 'knockout', 'lodash', './ko/missingFeatures'],
             return result || null;
         }
 
-        return new AppContext();
+        return new Framework();
     });

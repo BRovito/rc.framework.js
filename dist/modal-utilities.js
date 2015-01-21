@@ -1,6 +1,6 @@
-define(['jquery', 'app/utilities'],
-    function($, utilities) {
-        "use strict";
+define(['jquery', 'framework-utilities'],
+    function($, frameworkUtilities) {
+        'use strict';
 
         var modalHelper = {};
 
@@ -10,7 +10,6 @@ define(['jquery', 'app/utilities'],
 
             modalHelper.$savingModalWindow = addGenericModalWindow($body, loadingGifUrl, 'Enregistrement, veuillez patienter...');
             modalHelper.$loadingModalWindow = addGenericModalWindow($body, loadingGifUrl, 'Chargement, veuillez patienter...');
-
         };
 
         modalHelper.showSavingModalWindow = function() {
@@ -29,7 +28,6 @@ define(['jquery', 'app/utilities'],
             return hide(modalHelper.$loadingModalWindow);
         };
 
-
         modalHelper.hideAll = function() {
             return $.when(
                 hide(modalHelper.$loadingModalWindow),
@@ -43,7 +41,7 @@ define(['jquery', 'app/utilities'],
             hide($elementToHide).then(function() {
                 if (!$elementToShow.hasClass('in')) {
                     $elementToShow.modal('show')
-                        .on('shown.bs.modal', function(e) {
+                        .on('shown.bs.modal', function(/*e*/) {
                             deferred.resolve($elementToShow);
                         });
                 } else {
@@ -59,7 +57,7 @@ define(['jquery', 'app/utilities'],
 
             if ($elementToHide.hasClass('in')) {
                 $elementToHide.modal('hide')
-                    .on('hidden.bs.modal', function(e) {
+                    .on('hidden.bs.modal', function(/*e*/) {
                         deferred.resolve($elementToHide);
                     });
             } else {
@@ -70,7 +68,7 @@ define(['jquery', 'app/utilities'],
         }
 
         function addGenericModalWindow($body, loadingGifUrl, message) {
-            var uniqueId = utilities.generateUniqueElementId();
+            var uniqueId = frameworkUtilities.generateUniqueElementId();
 
             var $window = $('<div class="modal fade" id="' + uniqueId + '" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">' +
                 '<div class="modal-dialog">' +
