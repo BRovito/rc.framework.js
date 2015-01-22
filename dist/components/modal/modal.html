@@ -1,5 +1,7 @@
-<!-- ko if: framework.currentModal -->
-<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-bind="component: { name: framework.currentModal().componentName, params: framework.currentModal().settings }">
-
-</div>
+<!-- ko if: framework.isModalOpen -->
+<!-- ko component: {
+    name: framework.currentModal().componentName,
+    params: framework.currentModal().settings
+} -->
+<!-- /ko -->
 <!-- /ko -->

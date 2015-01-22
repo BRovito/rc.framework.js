@@ -96,8 +96,6 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             self.$dialogElement = getDialogElement();
 
             self.$modalElement.modal({
-                backdrop: 'static',
-                keyboard: false,
                 show: false
             });
 
@@ -177,7 +175,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             var modal = {
                 settings: {
                     close: function(data) {
-                        return hideModal().then(function() {
+                        return hideModal(self).then(function() {
                             self.currentModal(null);
                             deferred.resolve(data);
                         });
@@ -191,7 +189,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             var currentModal = self.currentModal();
 
             if (currentModal) {
-                currentModal.close().then(function() {
+                currentModal.settings.close().then(function() {
                     showModal(self, modal);
                 });
             } else {
@@ -207,7 +205,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             var currentModal = this.currentModal();
 
             if (currentModal) {
-                currentModal.close().then(function() {
+                currentModal.settings.close().then(function() {
                     deferred.resolve();
                 });
             } else {
@@ -221,7 +219,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             var currentDialog = this.currentDialog();
 
             if (currentDialog) {
-                currentDialog.close();
+                currentDialog.settings.close();
             }
         };
 
@@ -536,6 +534,14 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
 
         function showModal(self, modal) {
             self.currentModal(modal);
+
+            //TODO: Permettre de spécifier keyboard settings
+            self.$modalElement.removeData('bs.modal').modal({
+                backdrop: 'static',
+                keyboard: false,
+                show: true
+            });
+
             var deferred = new $.Deferred();
 
             if (!self.$modalElement.hasClass('in')) {
@@ -553,9 +559,14 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
         function hideModal(self) {
             var deferred = new $.Deferred();
 
+            self.$modalElement.modal({
+                show: false
+            });
+
             if (self.$modalElement.hasClass('in')) {
                 self.$modalElement.modal('hide')
                     .on('hidden.bs.modal', function( /*e*/ ) {
+                        self.$modalElement.removeData('bs.modal');
                         deferred.resolve(self.$modalElement);
                     });
             } else {
