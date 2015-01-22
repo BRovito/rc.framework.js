@@ -1,5 +1,5 @@
-define([],
-    function() {
+define(['jquery'],
+    function($) {
         'use strict';
 
         function FrameworkUtilities(){
@@ -106,6 +106,42 @@ define([],
 
             return obj;
         };
+
+        //todo: remove when this https://github.com/knockout/knockout/issues/1475
+        FrameworkUtilities.prototype.koBindingDone = function(element, childElementCount, attempts) {
+            var dfd = $.Deferred();
+
+            if (!attempts) {
+                attempts = 400; //default
+            }
+
+            koBindingDoneTest(1, element, dfd, childElementCount, attempts);
+
+            return dfd.promise();
+        };
+
+        function koBindingDoneTest(attempt, element, dfd, childElementCount, attempts) {
+            if (attempt >= attempts) {
+                dfd.reject('koBindingDone timeout after ' + attempts + ' attempts.');
+                return;
+            }
+
+            // console.info('attempt', attempt, element.childElementCount);
+            var bindingDone = element.childElementCount > 0;
+
+            if (childElementCount) {
+                bindingDone = element.childElementCount === childElementCount;
+            }
+
+            if (bindingDone) {
+                dfd.resolve(element);
+                return;
+            }
+
+            setTimeout(function() {
+                koBindingDoneTest(attempt + 1, element, dfd, childElementCount, attempts);
+            }, 1);
+        }
 
         return new FrameworkUtilities();
     });

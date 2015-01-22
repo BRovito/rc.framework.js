@@ -440,7 +440,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                 htmlOnly: dialogConfig.htmlOnly,
                 basePath: dialogConfig.basePath,
                 isBower: dialogConfig.isBower,
-                type: "dialog"
+                type: 'dialog'
             };
         }
 
@@ -450,7 +450,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                 htmlOnly: modalConfig.htmlOnly,
                 basePath: modalConfig.basePath,
                 isBower: modalConfig.isBower,
-                type: "modal"
+                type: 'modal'
             };
         }
 
