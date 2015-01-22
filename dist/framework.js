@@ -1,5 +1,5 @@
 define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utilities', 'knockout-configurator'],
-    function($, bootstrap, ko, _, crossroads, hasher, frameworkUtilities) {
+    function($, bootstrap, ko, _, crossroads, hasher, frameworkUtilities, knockoutConfigurator) {
         'use strict';
 
         function Framework() {
@@ -110,6 +110,8 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                 name: 'modal',
                 basePath: 'bower_components/rc.framework.js/dist/components/'
             });
+
+            knockoutConfigurator.configure();
 
             ko.applyBindings({
                 framework: self
