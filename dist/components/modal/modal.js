@@ -1,4 +1,4 @@
-define(['framework', 'text!./dialogs.html'],
+define(['framework', 'text!./modal.html'],
     function(framework, template) {
 
         var ViewModel = function (params, componentInfo) {
