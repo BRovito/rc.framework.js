@@ -175,25 +175,26 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             var modal = {
                 settings: {
                     close: function(data) {
-                        return hideModal(self).then(function() {
-                            self.currentModal(null);
-                            deferred.resolve(data);
-                        });
+                        modal.data = data;
+                        return hideModal(self);
                     },
                     params: params,
                     title: modalConfigToShow.title
                 },
-                componentName: modalConfigToShow.componentName
+                componentName: modalConfigToShow.componentName,
+                //TODO: On pourrait permettre d'overrider les settings de base (du registerModal) pour chaque affichage en passant backdrop & keyboard en plus a Framework.prototype.showModal
+                backdrop: modalConfigToShow.backdrop,
+                keyboard: modalConfigToShow.keyboard
             };
 
             var currentModal = self.currentModal();
 
             if (currentModal) {
                 currentModal.settings.close().then(function() {
-                    showModal(self, modal);
+                    showModal(self, deferred, modal);
                 });
             } else {
-                showModal(self, modal);
+                showModal(self, deferred, modal);
             }
 
             return deferred.promise();
@@ -532,41 +533,44 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             return result || null;
         }
 
-        function showModal(self, modal) {
+        function showModal(self, deferred, modal) {
+            self.$modalElement.on('hidden.bs.modal', function( /*e*/ ) {
+                self.currentModal(null);
+                deferred.resolve(modal.data);
+            });
+
             self.currentModal(modal);
 
-            //TODO: Permettre de spécifier keyboard settings
             self.$modalElement.removeData('bs.modal').modal({
-                backdrop: 'static',
-                keyboard: false,
+                backdrop: modal.backdrop,
+                keyboard: modal.keyboard,
                 show: true
             });
 
-            var deferred = new $.Deferred();
+            var def = new $.Deferred();
 
             if (!self.$modalElement.hasClass('in')) {
                 self.$modalElement.modal('show')
                     .on('shown.bs.modal', function( /*e*/ ) {
-                        deferred.resolve(self.$modalElement);
+                        def.resolve(self.$modalElement);
                     });
             } else {
-                deferred.resolve(self.$modalElement);
+                def.resolve(self.$modalElement);
             }
 
-            return deferred.promise();
+            return def.promise();
         }
 
         function hideModal(self) {
             var deferred = new $.Deferred();
 
-            self.$modalElement.modal({
-                show: false
-            });
+            // self.$modalElement.modal({
+            //     show: false
+            // });
 
             if (self.$modalElement.hasClass('in')) {
                 self.$modalElement.modal('hide')
                     .on('hidden.bs.modal', function( /*e*/ ) {
-                        self.$modalElement.removeData('bs.modal');
                         deferred.resolve(self.$modalElement);
                     });
             } else {
