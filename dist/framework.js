@@ -91,9 +91,6 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
         Framework.prototype.init = function( /*config*/ ) {
             var self = this;
 
-            ko.applyBindings({
-                framework: self
-            });
 
             self.$modalElement = getModalElement();
             self.$dialogElement = getDialogElement();
@@ -112,6 +109,10 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             self.registerComponent({
                 name: 'modal',
                 basePath: 'bower_components/rc.framework.js/dist/components/'
+            });
+
+            ko.applyBindings({
+                framework: self
             });
 
             hasher.init();
