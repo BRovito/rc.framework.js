@@ -1,4 +1,4 @@
-define(['jquery', 'bootstrap','knockout', 'lodash', 'crossroads', 'hasher', 'framework-utilities'],
+define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'framework-utilities'],
     function($, bootstrap, ko, _, crossroads, hasher, frameworkUtilities) {
         'use strict';
 
@@ -96,6 +96,7 @@ define(['jquery', 'bootstrap','knockout', 'lodash', 'crossroads', 'hasher', 'fra
             });
 
             self.$modalElement = getModalElement();
+            self.$dialogElement = getDialogElement();
 
             self.$modalElement.modal({
                 backdrop: 'static',
@@ -119,16 +120,6 @@ define(['jquery', 'bootstrap','knockout', 'lodash', 'crossroads', 'hasher', 'fra
         Framework.prototype.showDialog = function(name, params) {
             var deferred = new $.Deferred();
             var self = this;
-
-            var $dialogsElement = $('dialogs');
-
-            if ($dialogsElement.length < 1) {
-                throw new Error('Framework.showDialog - Cannot show dialog if dialogs component is not part of the page.');
-            }
-
-            if ($dialogsElement.length > 1) {
-                throw new Error('Framework.showDialog - Cannot show dialog if more than one dialogs component is part of the page.');
-            }
 
             var dialogConfigToShow = findByName(self.dialogConfigs, name);
 
@@ -585,6 +576,20 @@ define(['jquery', 'bootstrap','knockout', 'lodash', 'crossroads', 'hasher', 'fra
             }
 
             return $modalElement;
+        }
+
+        function getDialogElement() {
+            var $dialogsElement = $('dialogs');
+
+            if ($dialogsElement.length < 1) {
+                throw new Error('Framework.showDialog - Cannot show dialog if dialogs component is not part of the page.');
+            }
+
+            if ($dialogsElement.length > 1) {
+                throw new Error('Framework.showDialog - Cannot show dialog if more than one dialogs component is part of the page.');
+            }
+
+            return $dialogsElement;
         }
 
         return new Framework();
