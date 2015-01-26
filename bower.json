@@ -25,6 +25,7 @@
     "hasher": "~1.2.0",
     "lodash": "~3.0.0",
     "requirejs": "~2.1.15",
-    "requirejs-text": "~2.0.13"
+    "requirejs-text": "~2.0.13",
+    "knockout-validation": "~2.0.1"
   }
 }
