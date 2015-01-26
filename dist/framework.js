@@ -318,6 +318,10 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             ko.components.register(componentConfig.name, koComponentConfig);
         };
 
+        Framework.prototype.isComponentRegistered = function(name) {
+            return ko.components.isRegistered(name);
+        };
+
         Framework.prototype.changeHashSilently = function(destination) {
             hasher.changed.active = false;
             hasher.setHash(destination);
