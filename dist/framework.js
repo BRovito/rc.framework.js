@@ -99,13 +99,11 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                 show: false
             });
 
-            self.registerComponent({
-                name: 'dialogs',
+            self.registerComponent('dialogs', {
                 basePath: 'bower_components/rc.framework.js/dist/components/'
             });
 
-            self.registerComponent({
-                name: 'modal',
+            self.registerComponent('modal', {
                 basePath: 'bower_components/rc.framework.js/dist/components/'
             });
 
@@ -226,17 +224,17 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             }
         };
 
-        Framework.prototype.registerPage = function(pageConfig) {
+        Framework.prototype.registerPage = function(name, pageConfig) {
             var self = this;
 
-            if (!pageConfig.name) {
+            if (!name) {
                 throw new Error('Framework.registerPage - Argument missing exception: name');
             }
 
-            var componentConfig = buildComponentConfigFromPageConfig(pageConfig);
-            this.registerComponent(componentConfig);
+            var componentConfig = buildComponentConfigFromPageConfig(name, pageConfig);
+            this.registerComponent(componentConfig.name, componentConfig);
 
-            var route = buildRoute(pageConfig, componentConfig);
+            var route = buildRoute(name, pageConfig, componentConfig);
 
             //il pourrait y avoir 2 urls identiques - une requireAuthentication et l'autre pas...
             if (_.any(self.routes,
@@ -253,40 +251,40 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             this.routes.push(route);
         };
 
-        Framework.prototype.registerModal = function(modalConfig) {
+        Framework.prototype.registerModal = function(name, modalConfig) {
             if (!modalConfig.name) {
                 throw new Error('Framework.registerModal - Argument missing exception: name');
             }
 
             var componentConfig = buildComponentConfigFromModalConfig(modalConfig);
-            this.registerComponent(componentConfig);
+            this.registerComponent(componentConfig.name, componentConfig);
 
-            var finalModalConfig = applyModalConventions(modalConfig, componentConfig);
+            var finalModalConfig = applyModalConventions(name, modalConfig, componentConfig);
 
             this.modalConfigs.push(finalModalConfig);
         };
 
-        Framework.prototype.registerDialog = function(dialogConfig) {
+        Framework.prototype.registerDialog = function(name, dialogConfig) {
             if (!dialogConfig.name) {
                 throw new Error('Framework.registerDialog - Argument missing exception: name');
             }
 
             var componentConfig = buildComponentConfigFromDialogConfig(dialogConfig);
-            this.registerComponent(componentConfig);
+            this.registerComponent(componentConfig.name, componentConfig);
 
-            var finalDialogConfig = applyDialogConventions(dialogConfig, componentConfig);
+            var finalDialogConfig = applyDialogConventions(name, dialogConfig, componentConfig);
 
             this.dialogConfigs.push(finalDialogConfig);
         };
 
         //Registers a ko component with Radio-Canada conventions
-        Framework.prototype.registerComponent = function(componentConfig) {
-            if (!componentConfig.name) {
+        Framework.prototype.registerComponent = function(name, componentConfig) {
+            if (!name) {
                 throw new Error('Framework.registerComponent - Argument missing exception: name');
             }
 
-            if (ko.components.isRegistered(componentConfig.name)) {
-                throw new Error('Framework.registerComponent - Already registered component: ' + componentConfig.name);
+            if (ko.components.isRegistered(name)) {
+                throw new Error('Framework.registerComponent - Already registered component: ' + name);
             }
 
             var basePath = componentConfig.basePath || 'components/';
@@ -296,10 +294,10 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                     componentConfig.type = "component";
                 }
 
-                basePath = "bower_components/rc." + componentConfig.type + "." + componentConfig.name + "/dist/";
+                basePath = "bower_components/rc." + componentConfig.type + "." + name + "/dist/";
             }
 
-            var requirePath = basePath + componentConfig.name + '/' + componentConfig.name;
+            var requirePath = basePath + name + '/' + name;
 
             if (componentConfig.htmlOnly) {
                 requirePath = 'text!' + requirePath + '.html';
@@ -315,7 +313,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                 };
             }
 
-            ko.components.register(componentConfig.name, koComponentConfig);
+            ko.components.register(name, koComponentConfig);
         };
 
         Framework.prototype.isComponentRegistered = function(name) {
@@ -429,9 +427,9 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             }
         }
 
-        function buildComponentConfigFromPageConfig(pageConfig) {
+        function buildComponentConfigFromPageConfig(name, pageConfig) {
             return {
-                name: pageConfig.name + '-page',
+                name: name + '-page',
                 htmlOnly: pageConfig.htmlOnly,
                 basePath: pageConfig.basePath,
                 isBower: pageConfig.isBower,
@@ -439,9 +437,9 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             };
         }
 
-        function buildComponentConfigFromDialogConfig(dialogConfig) {
+        function buildComponentConfigFromDialogConfig(name, dialogConfig) {
             return {
-                name: dialogConfig.name + '-dialog',
+                name: name + '-dialog',
                 htmlOnly: dialogConfig.htmlOnly,
                 basePath: dialogConfig.basePath,
                 isBower: dialogConfig.isBower,
@@ -449,9 +447,9 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             };
         }
 
-        function buildComponentConfigFromModalConfig(modalConfig) {
+        function buildComponentConfigFromModalConfig(name, modalConfig) {
             return {
-                name: modalConfig.name + '-modal',
+                name: name + '-modal',
                 htmlOnly: modalConfig.htmlOnly,
                 basePath: modalConfig.basePath,
                 isBower: modalConfig.isBower,
@@ -459,11 +457,11 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             };
         }
 
-        function applyDialogConventions(dialogConfig, componentConfig) {
+        function applyDialogConventions(name, dialogConfig, componentConfig) {
             var finalDialogConfig = $.extend({}, dialogConfig);
 
             if (!finalDialogConfig.title) {
-                finalDialogConfig.title = finalDialogConfig.name;
+                finalDialogConfig.title = name;
             }
 
             finalDialogConfig.componentName = componentConfig.name;
@@ -471,11 +469,11 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             return finalDialogConfig;
         }
 
-        function applyModalConventions(modalConfig, componentConfig) {
+        function applyModalConventions(name, modalConfig, componentConfig) {
             var finalModalConfig = $.extend({}, modalConfig);
 
             if (!finalModalConfig.title) {
-                finalModalConfig.title = finalModalConfig.name;
+                finalModalConfig.title = name;
             }
 
             finalModalConfig.componentName = componentConfig.name;
@@ -483,13 +481,13 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             return finalModalConfig;
         }
 
-        function buildRoute(pageConfig, componentConfig) {
+        function buildRoute(name, pageConfig, componentConfig) {
             var route = {
-                url: pageConfig.name,
+                url: name,
                 params: {},
                 componentName: componentConfig.name,
-                name: pageConfig.name,
-                title: pageConfig.name,
+                name: name,
+                title: name,
                 excludedFromNav: false,
                 hideNav: false
             };
