@@ -231,6 +231,8 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
                 throw new Error('Framework.registerPage - Argument missing exception: name');
             }
 
+            pageConfig = pageConfig || {};
+
             var componentConfig = buildComponentConfigFromPageConfig(name, pageConfig);
             this.registerComponent(componentConfig.name, componentConfig);
 
@@ -252,11 +254,13 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
         };
 
         Framework.prototype.registerModal = function(name, modalConfig) {
-            if (!modalConfig.name) {
+            if (!name) {
                 throw new Error('Framework.registerModal - Argument missing exception: name');
             }
 
-            var componentConfig = buildComponentConfigFromModalConfig(modalConfig);
+            modalConfig = modalConfig || {};
+
+            var componentConfig = buildComponentConfigFromModalConfig(name, modalConfig);
             this.registerComponent(componentConfig.name, componentConfig);
 
             var finalModalConfig = applyModalConventions(name, modalConfig, componentConfig);
@@ -265,11 +269,14 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
         };
 
         Framework.prototype.registerDialog = function(name, dialogConfig) {
-            if (!dialogConfig.name) {
+            if (!name) {
                 throw new Error('Framework.registerDialog - Argument missing exception: name');
             }
 
-            var componentConfig = buildComponentConfigFromDialogConfig(dialogConfig);
+            dialogConfig = dialogConfig || {};
+            dialogConfig.name = name;
+
+            var componentConfig = buildComponentConfigFromDialogConfig(name, dialogConfig);
             this.registerComponent(componentConfig.name, componentConfig);
 
             var finalDialogConfig = applyDialogConventions(name, dialogConfig, componentConfig);
@@ -286,6 +293,8 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             if (ko.components.isRegistered(name)) {
                 throw new Error('Framework.registerComponent - Already registered component: ' + name);
             }
+
+            componentConfig = componentConfig || {};
 
             var basePath = componentConfig.basePath || 'components/';
 
@@ -390,7 +399,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             } else {
                 route.params.queryParams = queryParams;
                 route.params.parsedQueryString = frameworkUtilities.chrissRogersJQqueryDeparam(queryParams["?query_"], true);
-                route.params.request = queryParams["request_"];
+                route.params.request = queryParams.request_;
                 route.params.queryString = queryParams["?query_"];
 
                 //todo: si la route à un "loader" (funciton qui retourne une promesse - nom a déterminer (ex. activate)), lancer l'inititalisation... ;-) (durandal activate...)
