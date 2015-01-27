@@ -350,7 +350,9 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             //TODO: Utile?
             crossroads.normalizeFn = crossroads.NORM_AS_OBJECT;
 
-            crossroads.bypassed.add(self.unknownRouteHandler);
+            crossroads.bypassed.add(function(){
+                self.unknownRouteHandler();
+            });
 
             hasher.initialized.add(function(newHash /*, oldHash*/ ) {
                 parseHash(self, newHash);
@@ -374,7 +376,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             var route = filteredRoutes[0];
 
             if (!route) {
-                throw "No filtered route has been found. (Did you add a page yet?)";
+                throw "No route has been found. Did you add one yet?";
             }
 
             if (filteredRoutes.length > 1) {
