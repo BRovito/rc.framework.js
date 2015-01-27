@@ -259,6 +259,7 @@ define(['jquery', 'bootstrap', 'knockout', 'lodash', 'crossroads', 'hasher', 'fr
             }
 
             modalConfig = modalConfig || {};
+            modalConfig.name = name;
 
             var componentConfig = buildComponentConfigFromModalConfig(name, modalConfig);
             this.registerComponent(componentConfig.name, componentConfig);
